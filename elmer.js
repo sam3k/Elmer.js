@@ -1,34 +1,52 @@
 ;(function(){
   
-  var registrations  =  [],
-      cookieLabel    =  'Elmer';
+  var enabled      =  true,
+      registrar    =  [],
+      cookieLabel  =  'Elmer',
+      offLabel     =  'ElmerOff';
   
   
   /**
    * @constructor
    */
   function Elmer(funcName) {
-  
+    
+    if( !this.enabled ) {
+      return console;  // if disable, act as the regular console. 
+    }
+      
     fixTraces();     // Try to add back lines if possible
-    arrayRemove();   // add remove to Array
     
     this.name = funcName || 'global'; // should be override by each function that uses it
     
     this.register( this.name );
-    this.registerCookieObjects();
+    this.registerByCookie();
     
-    if( _.indexOf( registrations, 'ElmerOff' ) == -1 && !this.inCookie( 'ElmerOff' ) ) {
+    if( !this.isRegister( offLabel ) ) {
       this.overrideConsole();
     }
     
   }
   
   
+  Elmer.prototype.enabled = enabled;
+  
+  
   /**
-   * Check cookies to see if new registrations have been made
+   * Find out if the label has been registered in the registrar or the cookie
+   *
+   * @param {String} Label to look for in the cookie or registrar
+   */
+  Elmer.prototype.isRegister = function( label ) {
+    return ( _.indexOf( registrar, label ) > -1 || this.inCookie( label ) ) ? true : false;
+  }
+  
+  
+  /**
+   * Check cookies to see if new registrar have been made
    * @public 
    */
-  Elmer.prototype.registerCookieObjects = function() {
+  Elmer.prototype.registerByCookie = function() {
     var i, str, length;
     
     str     =  this.getCookie(cookieLabel);
@@ -40,31 +58,6 @@
       if( _.indexOf( str, str[i] ) == -1 ) {
         this.register( this.name );
       }
-    }
-  }
-  
-  
-  /**
-   * Add method to Array to remove by item value
-   * @private
-   * @credit http://stackoverflow.com/questions/3954438/remove-item-from-array-by-value
-   */
-  function arrayRemove() {
-    if( !Array.prototype.remove ) {
-    
-      Array.prototype.remove = function() {
-        var what, a = arguments, L = a.length, ax, arr = this;
-        
-        while (L && arr.length) {
-          what = a[--L];
-          while ( ( ax = _.indexOf( arr, what ) ) !== -1 ) {
-            arr.splice(ax, 1);
-          }
-        }
-        
-        return this;
-      };
-      
     }
   }
   
@@ -126,11 +119,9 @@
    * @public
    */
   Elmer.prototype.register = function(funcName) {
-    if( _.indexOf( registrations, funcName ) == -1 ) {
-      registrations.push(funcName);
+    if( _.indexOf( registrar, funcName ) == -1 ) {
+      registrar.push(funcName);
       this.name = funcName;
-    } else {
-      console.info('already registered');
     }
   }
   
@@ -140,12 +131,15 @@
    */
   Elmer.prototype.log = function() {
     var args, name = this.name;
-    if( _.indexOf( registrations, name ) > -1 && !this.inCookie(name) ) {
+
+    if( this.isRegister(name) ) {
       args = Array.prototype.splice.call(arguments,0);
       args.unshift('[' + name + ']');
+      
       window.console.on = true;
       window.console.log.apply(console, args);
     }
+    
   };
   
   
@@ -155,21 +149,25 @@
   Elmer.prototype.overrideConsole = function() {
     var _log  = window.console.log;
     
-    if( !window.console.overriden ) {   
+    if( !window.console.overriden ) { 
+      
       window.console.log = function(str) {
         if( window.console.on ) {
           window.console.on = false;
           return _log.apply(this, arguments);
         }
       };
+      
       window.console.overriden = true;
+      
     }    
-    
+
   }
   
   
   /**
    * See if funcName is in cookie or not
+   *
    * @public
    */
   Elmer.prototype.inCookie = function(funcName) {
@@ -188,9 +186,10 @@
     var value, cookie = this.getCookie(cookieLabel);
     
     if( typeof funcName == 'undefined' ) {
-      value = cookie.replace(' ElmerOff,','');
+      value = cookie.replace( offLabel, '' );
+
       this.setCookie(cookieLabel, value);
-      registrations.remove('ElmerOff');
+      registrar = _.without(registrar, offLabel);
     } else {
       this.appendToCookie(funcName);
     }
@@ -200,34 +199,34 @@
   
   /**
    * Disable Elmer. Good for when you need accurate line numbers. 
+   *
    * Requires refresh.
    * @private
    */
   Elmer.prototype.disable = function() {
-    this.appendToCookie('ElmerOff');
-    console.info("Don't forget to refresh the page");
+    this.appendToCookie(offLabel);
   }
 
 
   Elmer.prototype.appendToCookie = function(str) {
-    var value   =  'ElmerOff',
-        cookie  =  this.getCookie(cookieLabel);
+    var cookie  =  this.getCookie(cookieLabel);
     
     if( !this.inCookie(str) ) {
       cookie += str+',';
-      this.setCookie(cookieLabel, value);
-      registrations.push(value);
-    } else {
-      console.warn('value already in cookie');
+      this.setCookie(cookieLabel, offLabel);
+      this.register(offLabel);
     }
   }  
   
   
   /**
+   * Utility to create/store the Elmer cookie with a value. 
+   *
    * @public 
    * @param {String} name Name of the cookie
    * @param {String} value Value of the cookie
    * @param {String} expire Expiration in days
+   * @credit W3C Standards 
    */
   Elmer.prototype.setCookie = function (name, value, expire) {
     var exdate, cookiesValue;
@@ -241,21 +240,23 @@
   
   
   /**
-   * Get the value of the Elmer cookie
+   * Utility to get the value of the Elmer cookie
+   *
    * @public
+   * @credit W3C Standards
    */
   Elmer.prototype.getCookie = function () {
     var i,x,y,v, cookies, name = cookieLabel;
     
     cookies = document.cookie.split(";");
     
-    for (i=0; i<cookies.length; i++) {
+    for( i=0; i<cookies.length; i++ ) {
       v = _.indexOf( cookies[i], '=' );
       x = cookies[i].substr( 0, v );
       y = cookies[i].substr( v + 1 );
       x = x.replace(/^\s+|\s+$/g,"");
       
-      if(x == name) {
+      if( x == name ) {
         return unescape(y);
       }
     }
@@ -268,6 +269,11 @@
    */
   Elmer.prototype.getName = function() {
     return this.name;
+  }
+  
+  
+  Elmer.prototype.getRegistrar = function() {
+    return registrar;
   }
 
   
