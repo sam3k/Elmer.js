@@ -63,59 +63,6 @@
   
   
   /**
-   * Unfortunately, with abstraction of console, we lose line/number traces. We try to correct them with this by 
-   * passing __line and __file as params to console[function]. If you really need to see the numbers, turn off 
-   * Elmer by adding ElmerOff to setCookie() 
-   *
-   * @private
-   */
-  function fixTraces() {
-  
-    if( !window.__stack ) {
-    
-      Object.defineProperty(window, '__stack', {
-        get: function(){
-          var orig, err, stack;
-          
-          orig = Error.prepareStackTrace;
-          Error.prepareStackTrace = function(_, stack){ return stack; };
-          
-          err = new Error;
-          Error.captureStackTrace(err, arguments.callee);
-          
-          stack = err.stack;
-          Error.prepareStackTrace = orig;
-          
-          return stack;
-        }
-      });
-      
-    }
-    
-    if( !window.__file ) {
-    
-      Object.defineProperty(window, '__file', {
-        get: function(){
-          return '[[ on: ' +__stack[1].getFileName(); 
-        }
-      });  
-      
-    }
-    
-    if( !window.__line ) {
-    
-      Object.defineProperty(window, '__line', {
-        get: function(){
-          return 'line: ' + __stack[1].getLineNumber() + ' ]]'; 
-        }
-      });  
-      
-    }
-    
-  }
-  
-  
-  /**
    * @public
    */
   Elmer.prototype.register = function(funcName) {
@@ -274,6 +221,59 @@
   
   Elmer.prototype.getRegistrar = function() {
     return registrar;
+  }
+  
+
+  /**
+   * Unfortunately, with abstraction of console, we lose line/number traces. We try to correct them with this by 
+   * passing __line and __file as params to console[function]. If you really need to see the numbers, turn off 
+   * Elmer by adding ElmerOff to setCookie() 
+   *
+   * @private
+   */
+  function fixTraces() {
+  
+    if( !window.__stack ) {
+    
+      Object.defineProperty(window, '__stack', {
+        get: function(){
+          var orig, err, stack;
+          
+          orig = Error.prepareStackTrace;
+          Error.prepareStackTrace = function(_, stack){ return stack; };
+          
+          err = new Error;
+          Error.captureStackTrace(err, arguments.callee);
+          
+          stack = err.stack;
+          Error.prepareStackTrace = orig;
+          
+          return stack;
+        }
+      });
+      
+    }
+    
+    if( !window.__file ) {
+    
+      Object.defineProperty(window, '__file', {
+        get: function(){
+          return '[[ on: ' +__stack[1].getFileName(); 
+        }
+      });  
+      
+    }
+    
+    if( !window.__line ) {
+    
+      Object.defineProperty(window, '__line', {
+        get: function(){
+          return 'line: ' + __stack[1].getLineNumber() + ' ]]'; 
+        }
+      });  
+      
+    }
+    
   }
 
   
