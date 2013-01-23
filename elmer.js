@@ -36,6 +36,7 @@
    * Find out if the label has been registered in the registrar or the cookie
    *
    * @param {String} Label to look for in the cookie or registrar
+   * @returns {Boolean} 
    */
   Elmer.prototype.isRegister = function( label ) {
     return ( _.indexOf( registrar, label ) > -1 || this.inCookie( label ) ) ? true : false;
@@ -134,6 +135,7 @@
    * See if funcName is in cookie or not
    *
    * @public
+   * @return {Boolean} 
    */
   Elmer.prototype.inCookie = function(funcName) {
     var str = this.getCookie(cookieLabel);
@@ -175,6 +177,12 @@
   }
 
 
+  /**
+   * Method that adds to the current value of the cookie unlike setCookie 
+   * which wipes out its current value
+   *
+   * @public
+   */
   Elmer.prototype.appendToCookie = function(str) {
     var cookie  =  this.getCookie(cookieLabel);
 
@@ -212,6 +220,7 @@
    *
    * @public
    * @credit W3C Standards
+   * @returns {String} cookie value
    */
   Elmer.prototype.getCookie = function () {
     var i,x,y,v, cookies, name = cookieLabel;
@@ -234,12 +243,18 @@
   /**
    * Get the name given to this instance
    * @public
+   * @returns {String} Name of this instance
    */
   Elmer.prototype.getName = function() {
     return this.name;
   }
   
   
+  /**
+   * Gets registrar 
+   * @public 
+   * @returns {Array} registrar array
+   */
   Elmer.prototype.getRegistrar = function() {
     return registrar;
   }
@@ -299,5 +314,12 @@
 
   
   window.Elmer = Elmer;
+  
+  // Basic AMD Support. Might need more work.
+  if (typeof window.define === "function" && window.define.amd) {
+    window.define("Elmer", [], function() {
+      return window.Elmer;
+    });
+  }
 
 })();
