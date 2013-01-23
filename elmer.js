@@ -63,11 +63,26 @@
   
   
   /**
+   * Sync up the registrar and cookies
+   *
+   * @public
+   */
+  Elmer.prototype.sync = function() {
+    var str   =  this.getCookie(),
+        sync  =  _.union( str.split(','), registrar );
+    
+    registrar = sync;
+    this.setCookie( sync.join() );
+  }
+  
+  
+  /**
    * @public
    */
   Elmer.prototype.register = function(funcName) {
     if( _.indexOf( registrar, funcName ) == -1 ) {
       registrar.push(funcName);
+      this.sync();
       this.name = funcName;
     }
   }
@@ -91,7 +106,10 @@
   
   
   /**
+   * Override default console. This method should dynamically override all console methods instead
+   *
    * @public
+   * @todo : dynamically override each console method as oppose to one by one 
    */
   Elmer.prototype.overrideConsole = function() {
     var _log  = window.console.log;
@@ -127,15 +145,17 @@
   
   /**
    * Enable Elmer. Requires refresh to see it enabled.
+   *
    * @public
    */
   Elmer.prototype.enable = function(funcName) {
     var value, cookie = this.getCookie(cookieLabel);
     
     if( typeof funcName == 'undefined' ) {
-      value = cookie.replace( offLabel, '' );
+      value = cookie.replace( offLabel+',', '' );  // remove with comma
+      value = value.replace( offLabel, '' );       // remove without comma, just in case
 
-      this.setCookie(cookieLabel, value);
+      this.setCookie(value);
       registrar = _.without(registrar, offLabel);
     } else {
       this.appendToCookie(funcName);
@@ -157,10 +177,11 @@
 
   Elmer.prototype.appendToCookie = function(str) {
     var cookie  =  this.getCookie(cookieLabel);
-    
+
     if( !this.inCookie(str) ) {
       cookie += str+',';
-      this.setCookie(cookieLabel, offLabel);
+      
+      this.setCookie(cookie);
       this.register(offLabel);
     }
   }  
@@ -175,8 +196,8 @@
    * @param {String} expire Expiration in days
    * @credit W3C Standards 
    */
-  Elmer.prototype.setCookie = function (name, value, expire) {
-    var exdate, cookiesValue;
+  Elmer.prototype.setCookie = function (value, expire) {
+    var exdate, cookiesValue, name = cookieLabel;
     
     exdate = new Date();
     exdate.setDate( exdate.getDate() + expire );
