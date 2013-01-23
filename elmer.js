@@ -11,14 +11,13 @@
   
     fixTraces();     // Try to add back lines if possible
     arrayRemove();   // add remove to Array
-    checkIndexOf();  // add indexOf support in IE
     
     this.name = funcName || 'global'; // should be override by each function that uses it
     
     this.register( this.name );
     this.registerCookieObjects();
     
-    if( registrations.indexOf( 'ElmerOff' ) == -1 && !this.inCookie( 'ElmerOff' ) ) {
+    if( _.indexOf( registrations, 'ElmerOff' ) == -1 && !this.inCookie( 'ElmerOff' ) ) {
       this.overrideConsole();
     }
     
@@ -38,62 +37,8 @@
     str.split(',');
         
     for( var i=0; i<=length; i++ ) {
-      if(str.indexOf(str) == -1) {
+      if( _.indexOf( str, str[i] ) == -1 ) {
         this.register( this.name );
-      }
-    }
-  }
-  
-  
-  /**
-   * @private
-   * @credit https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/IndexOf
-   */
-  function checkIndexOf() {
-    var t, n, k, len;
-     
-    if (!Array.prototype.indexOf) {
-      Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
-        "use strict";
-        
-        if (this == null) {
-          throw new TypeError();
-        }
-        
-        t    =  Object(this);
-        len  =  t.length >>> 0;
-        
-        if (len === 0) {
-          return -1;
-        }
-        
-        n = 0;
-        
-        if (arguments.length > 1) {
-        
-          n = Number(arguments[1]);
-          
-          if (n != n) { // shortcut for verifying if it's NaN
-            n = 0;
-          } else if (n != 0 && n != Infinity && n != -Infinity) {
-            n = (n > 0 || -1) * Math.floor(Math.abs(n));
-          }
-          
-        }
-        
-        if (n >= len) {
-          return -1;
-        }
-        
-        k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
-        
-        for (; k < len; k++) {
-          if (k in t && t[k] === searchElement) {
-            return k;
-          }
-        }
-        
-        return -1;
       }
     }
   }
@@ -106,16 +51,20 @@
    */
   function arrayRemove() {
     if( !Array.prototype.remove ) {
+    
       Array.prototype.remove = function() {
-        var what, a = arguments, L = a.length, ax;
-        while (L && this.length) {
+        var what, a = arguments, L = a.length, ax, arr = this;
+        
+        while (L && arr.length) {
           what = a[--L];
-          while ((ax = this.indexOf(what)) !== -1) {
-            this.splice(ax, 1);
+          while ( ( ax = _.indexOf( arr, what ) ) !== -1 ) {
+            arr.splice(ax, 1);
           }
         }
+        
         return this;
       };
+      
     }
   }
   
@@ -177,7 +126,7 @@
    * @public
    */
   Elmer.prototype.register = function(funcName) {
-    if( registrations.indexOf(funcName) == -1 ) {
+    if( _.indexOf( registrations, funcName ) == -1 ) {
       registrations.push(funcName);
       this.name = funcName;
     } else {
@@ -191,7 +140,7 @@
    */
   Elmer.prototype.log = function() {
     var args, name = this.name;
-    if( registrations.indexOf( name ) > -1 && !this.inCookie(name) ) {
+    if( _.indexOf( registrations, name ) > -1 && !this.inCookie(name) ) {
       args = Array.prototype.splice.call(arguments,0);
       args.unshift('[' + name + ']');
       window.console.on = true;
@@ -227,7 +176,7 @@
     var str = this.getCookie(cookieLabel);
         str.split(',');
   
-    return (str.indexOf(funcName) > -1) ? true : false;
+    return ( _.indexOf( str, funcName ) > -1) ? true : false;
   }
   
   
@@ -296,13 +245,14 @@
    * @public
    */
   Elmer.prototype.getCookie = function () {
-    var i,x,y,cookies, name = cookieLabel;
+    var i,x,y,v, cookies, name = cookieLabel;
     
     cookies = document.cookie.split(";");
     
     for (i=0; i<cookies.length; i++) {
-      x = cookies[i].substr( 0,cookies[i].indexOf("=") );
-      y = cookies[i].substr( cookies[i].indexOf("=")+1 );
+      v = _.indexOf( cookies[i], '=' );
+      x = cookies[i].substr( 0, v );
+      y = cookies[i].substr( v + 1 );
       x = x.replace(/^\s+|\s+$/g,"");
       
       if(x == name) {
