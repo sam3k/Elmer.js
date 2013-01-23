@@ -4,7 +4,10 @@ Elmer.js
 Some improvements to the console for easier debugging in production environments.
 
 # TODO:
-- [ ] Switch to using Underscore/Lo-Dash for array methods
+- [x] Switch to using Underscore/Lo-Dash for array methods
 - [ ] Implement console.warn
 - [ ] Implement console.error
 - [ ] Implement AMD shim
+- [x] If cookie Elmer.disable() use default console (elmer=console) to keep line numbers
+- [ ] Create override console via a loop for less code
+- [ ] Enable/disable via hashes

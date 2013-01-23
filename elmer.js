@@ -280,12 +280,3 @@
   window.Elmer = Elmer;
 
 })();
-
-/*
-
-TODO:
-+ if cookie Elmer.off = true, use default console (elmer.log=console.log) to keep line numbers
-+ create override console via a loop for less code
-+ enable/disable via hashes
-
-*/
