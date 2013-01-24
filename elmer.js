@@ -1,5 +1,5 @@
-;(function(){
-  
+(function (){  
+   
   var enabled      =  true,
       registrar    =  [],
       cookieLabel  =  'Elmer',
@@ -15,7 +15,8 @@
       return console;  // if disable, act as the regular console. 
     }
       
-    fixTraces();     // Try to add back lines if possible
+    //fixTraces();     // Try to add back lines if possible
+    this.utils.init();
     
     this.name = funcName || 'global'; // should be override by each function that uses it
     
@@ -40,7 +41,7 @@
    */
   Elmer.prototype.isRegister = function( label ) {
     return ( _.indexOf( registrar, label ) > -1 || this.inCookie( label ) ) ? true : false;
-  }
+  };
   
   
   /**
@@ -55,12 +56,12 @@
     
     str.split(',');
         
-    for( var i=0; i<=length; i++ ) {
-      if( _.indexOf( str, str[i] ) == -1 ) {
+    for( i=0; i<=length; i++ ) {
+      if( _.indexOf( str, str[i] ) === -1 ) {
         this.register( this.name );
       }
     }
-  }
+  };
   
   
   /**
@@ -74,19 +75,19 @@
     
     registrar = sync;
     this.setCookie( sync.join() );
-  }
+  };
   
   
   /**
    * @public
    */
   Elmer.prototype.register = function(funcName) {
-    if( _.indexOf( registrar, funcName ) == -1 ) {
+    if( _.indexOf( registrar, funcName ) === -1 ) {
       registrar.push(funcName);
       this.sync();
       this.name = funcName;
     }
-  }
+  };
   
   
   /**
@@ -117,7 +118,7 @@
     
     if( !window.console.overriden ) { 
       
-      window.console.log = function(str) {
+      window.console.log = function() {
         if( window.console.on ) {
           window.console.on = false;
           return _log.apply(this, arguments);
@@ -128,7 +129,7 @@
       
     }    
 
-  }
+  };
   
   
   /**
@@ -142,7 +143,7 @@
         str.split(',');
   
     return ( _.indexOf( str, funcName ) > -1) ? true : false;
-  }
+  };
   
   
   /**
@@ -153,7 +154,7 @@
   Elmer.prototype.enable = function(funcName) {
     var value, cookie = this.getCookie(cookieLabel);
     
-    if( typeof funcName == 'undefined' ) {
+    if( typeof funcName === 'undefined' ) {
       value = cookie.replace( offLabel+',', '' );  // remove with comma
       value = value.replace( offLabel, '' );       // remove without comma, just in case
 
@@ -163,7 +164,7 @@
       this.appendToCookie(funcName);
     }
     
-  }
+  };
   
   
   /**
@@ -174,7 +175,7 @@
    */
   Elmer.prototype.disable = function() {
     this.appendToCookie(offLabel);
-  }
+  };
 
 
   /**
@@ -192,7 +193,7 @@
       this.setCookie(cookie);
       this.register(offLabel);
     }
-  }  
+  }; 
   
   
   /**
@@ -210,9 +211,9 @@
     exdate = new Date();
     exdate.setDate( exdate.getDate() + expire );
     
-    cookiesValue = escape(value) + ((expire==null) ? "" : "; expires="+exdate.toUTCString());
-    document.cookie = name + "=" + cookiesValue;
-  }
+    cookiesValue = escape(value) + ((expire===null) ? '' : '; expires='+exdate.toUTCString());
+    document.cookie = name + '=' + cookiesValue;
+  };
   
   
   /**
@@ -225,19 +226,19 @@
   Elmer.prototype.getCookie = function () {
     var i,x,y,v, cookies, name = cookieLabel;
     
-    cookies = document.cookie.split(";");
-    
+    cookies = document.cookie.split(';');
+  
     for( i=0; i<cookies.length; i++ ) {
       v = _.indexOf( cookies[i], '=' );
       x = cookies[i].substr( 0, v );
       y = cookies[i].substr( v + 1 );
-      x = x.replace(/^\s+|\s+$/g,"");
+      x = x.replace(/^\s+|\s+$/g,'');
       
-      if( x == name ) {
+      if( x === name ) {
         return unescape(y);
       }
     }
-  }
+  };
   
   
   /**
@@ -247,7 +248,7 @@
    */
   Elmer.prototype.getName = function() {
     return this.name;
-  }
+  };
   
   
   /**
@@ -257,9 +258,9 @@
    */
   Elmer.prototype.getRegistrar = function() {
     return registrar;
-  }
+  };
   
-
+  
   /**
    * Unfortunately, with abstraction of console, we lose line/number traces. We try to correct them with this by 
    * passing __line and __file as params to console[function]. If you really need to see the numbers, turn off 
@@ -267,57 +268,75 @@
    *
    * @private
    */
-  function fixTraces() {
+  Elmer.prototype.utils = {
   
-    if( !window.__stack ) {
-    
-      Object.defineProperty(window, '__stack', {
-        get: function(){
-          var orig, err, stack;
-          
-          orig = Error.prepareStackTrace;
-          Error.prepareStackTrace = function(_, stack){ return stack; };
-          
-          err = new Error;
-          Error.captureStackTrace(err, arguments.callee);
-          
-          stack = err.stack;
-          Error.prepareStackTrace = orig;
-          
-          return stack;
-        }
-      });
+    stack : function() {
       
-    }
-    
-    if( !window.__file ) {
-    
-      Object.defineProperty(window, '__file', {
-        get: function(){
-          return '[[ on: ' +__stack[1].getFileName(); 
-        }
-      });  
+      if( !window.__stack ) {
       
-    }
-    
-    if( !window.__line ) {
-    
-      Object.defineProperty(window, '__line', {
-        get: function(){
-          return 'line: ' + __stack[1].getLineNumber() + ' ]]'; 
-        }
-      });  
+        Object.defineProperty(window, '__stack', {
+          get: function(){
+            var orig, err, stack;
+            
+            orig = Error.prepareStackTrace;
+            Error.prepareStackTrace = function(_, stack){ return stack; };
+            
+            err = new Error();
+            Error.captureStackTrace(err, arguments.callee);
+            
+            stack = err.stack;
+            Error.prepareStackTrace = orig;
+            
+            return stack;
+          }
+        });
+        
+      }
       
-    }
+    },
     
-  }
+    file : function() {
+
+      if( !window.__file ) {
+      
+        Object.defineProperty(window, '__file', {
+          get: function(){
+            return '[[ on: ' +window.__stack[1].getFileName(); 
+          }
+        });  
+        
+      }
+
+    },
+    
+    line : function() {
+      
+      if( !window.__line ) {
+      
+        Object.defineProperty(window, '__line', {
+          get: function(){
+            return 'line: ' + window.__stack[1].getLineNumber() + ' ]]'; 
+          }
+        });
+      
+      }  
+      
+    },
+    
+    init : function() {
+      this.stack(); 
+      this.file();
+      this.line();
+    }
+
+  };  
 
   
   window.Elmer = Elmer;
   
   // Basic AMD Support. Might need more work.
-  if (typeof window.define === "function" && window.define.amd) {
-    window.define("Elmer", [], function() {
+  if (typeof window.define === 'function' && window.define.amd) {
+    window.define('Elmer', [], function() {
       return window.Elmer;
     });
   }

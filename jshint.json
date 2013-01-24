@@ -1,0 +1,23 @@
+{
+  "undef"      :  true,
+  "unused"     :  true,
+  "es5"        :  true,
+  "camelcase"  :  true,
+  "curly"      :  true,
+  "indent"     :  2,
+  "quotmark"   :  "single",
+  "newcap"     :  true,
+  "eqeqeq"     :  true,
+  "latedef"    :  true,
+  "globals"  :  {
+    "_"         :  false,
+    "Elmer"     :  false,
+    "define"    :  false,
+    "console"   :  false,
+    "require"   :  false,
+    "escape"    :  false,
+    "unescape"  :  false
+  },
+  "browser"    :  true,
+  "white"      :  false
+}
